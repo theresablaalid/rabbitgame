@@ -1,0 +1,38 @@
+stages:
+    - prepare
+    - test
+    - grade
+
+
+copyTestScripts:
+    image: python:3.8
+    stage: prepare
+    artifacts:
+        untracked: true
+    script:
+        - git clone https://$ADMIN_UNAME:$ADMIN_ACCESS_TOKEN@git.app.uib.no/ii/inf101/21v/tutors/inf101-test-runner
+        - pip install GitPython python-gitlab
+        - python inf101-test-runner/copyTests.py
+
+testing:
+    image: maven:latest
+    stage: test
+    artifacts:
+        untracked: true
+    dependencies:
+        - copyTestScripts
+    script:
+        - mvn test --fail-never
+
+grading:
+    image: python:3.8
+    stage: grade
+    artifacts:
+        untracked: true
+    dependencies:
+        - testing
+        - copyTestScripts
+    script:
+        - git clone https://$ADMIN_UNAME:$ADMIN_ACCESS_TOKEN@git.app.uib.no/ii/inf101/21v/tutors/inf101-test-runner
+        - pip install GitPython python-gitlab
+        - python inf101-test-runner/run.py
